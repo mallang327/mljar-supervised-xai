@@ -452,11 +452,12 @@ class ModelFramework:
         # run predict on all learners and return the average
         y_predicted = None  # np.zeros((X.shape[0],))
         shap_values = None
+ 
         for ind, learner in enumerate(self.learners):
             # preprocessing goes here
             X_data, _, _ = self.preprocessings[ind].transform(X.copy(), None)
             #y_p = learner.predict(X_data)
-            
+
             y_p, shap_v = learner.predict_shap(X_data)
             shap_values = shap_v if shap_values is None else [x + y for x, y in zip(shap_values, shap_v)]
             

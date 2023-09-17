@@ -6,6 +6,7 @@ import time
 import os
 import contextlib
 import lightgbm as lgb
+import shap
 
 from supervised.algorithms.algorithm import BaseAlgorithm
 from supervised.algorithms.registry import AlgorithmsRegistry
@@ -267,6 +268,15 @@ class LightgbmAlgorithm(BaseAlgorithm):
     def predict(self, X):
         self.reload()
         return self.model.predict(X.values if isinstance(X, pd.DataFrame) else X)
+
+    def predict_shap(self, X):
+        self.reload()
+        model_shap = copy.deepcopy(self.model)
+        model_shap.params = self.params
+        explainer = shap.TreeExplainer(model_shap)
+        shap_values = explainer.shap_values(X)
+        
+        return self.model.predict(X.values if isinstance(X, pd.DataFrame) else X), shap_values
 
     def copy(self):
         with open(os.devnull, "w") as f, contextlib.redirect_stdout(f):

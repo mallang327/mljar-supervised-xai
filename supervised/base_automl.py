@@ -1587,7 +1587,7 @@ class BaseAutoML(BaseEstimator, ABC):
 
     def _predict_plot(self, X):
 
-        predictions, shap_values = self._base_predict_plot(X)
+        predictions, shap_values, X = self._base_predict_plot(X)
         # Return predictions
         # If classification task the result is in column 'label'
         # If regression task the result is in column 'prediction'
@@ -1595,7 +1595,7 @@ class BaseAutoML(BaseEstimator, ABC):
             predictions["label"].to_numpy()
             if self._ml_task != REGRESSION
             else predictions["prediction"].to_numpy()
-        ), shap_values
+        ), shap_values, X
 
     def _predict(self, X):
         predictions = self._base_predict(X)
