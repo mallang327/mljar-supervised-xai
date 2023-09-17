@@ -1,4 +1,5 @@
-example/
+extract*
+examples/
 temp*
 AutoML_*
 .vscode
