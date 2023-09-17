@@ -9,10 +9,10 @@ import logging
 import json
 import gc
 import sys
-import matplotlib
+#import matplotlib
 #matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import shap
+#import matplotlib.pyplot as plt
+#import shap
 
 from supervised.callbacks.callback_list import CallbackList
 from supervised.validation.validation_step import ValidationStep
