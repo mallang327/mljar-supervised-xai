@@ -1446,7 +1446,76 @@ class BaseAutoML(BaseEstimator, ABC):
                 + [required_model_name]
             )
         )
+    
+    def _base_predict_plot(self, X, model=None):
 
+        if model is None:
+            if self._best_model is None:
+                self.load(self.results_path)
+            model = self._best_model
+
+        if model is None:
+            raise AutoMLException(
+                "This model has not been fitted yet. Please call `fit()` first."
+            )
+
+        X = self._build_dataframe(X)
+        if not isinstance(X.columns[0], str):
+            X.columns = [str(c) for c in X.columns]
+
+        input_columns = X.columns.tolist()
+        for column in self._data_info["columns"]:
+            if column not in input_columns:
+                raise AutoMLException(
+                    f"Missing column: {column} in input data. Cannot predict"
+                )
+
+        X = X[self._data_info["columns"]]
+        self._validate_X_predict(X)
+        # is stacked model
+        if model._is_stacked:
+            self._perform_model_stacking()
+            X_stacked = self.get_stacked_data(X, mode="predict")
+
+            if model.get_type() == "Ensemble":
+                # Ensemble is using both original and stacked data
+                predictions, shap_values = model.predict_plot(X, X_stacked)
+            else:
+                predictions, shap_values = model.predict_plot(X_stacked)
+        else:
+            predictions, shap_values = model.predict_plot(X)
+
+        if self._ml_task == BINARY_CLASSIFICATION:
+            # need to predict the label based on predictions and threshold
+            neg_label, pos_label = (
+                predictions.columns[0][11:],
+                predictions.columns[1][11:],
+            )
+
+            if neg_label == "0" and pos_label == "1":
+                neg_label, pos_label = 0, 1
+            target_is_numeric = self._data_info.get("target_is_numeric", False)
+            if target_is_numeric:
+                neg_label = int(neg_label)
+                pos_label = int(pos_label)
+            # assume that it is binary classification
+            predictions["label"] = predictions.iloc[:, 1] > model._threshold
+            predictions["label"] = predictions["label"].map(
+                {True: pos_label, False: neg_label}
+            )
+            return predictions, shap_values
+        elif self._ml_task == MULTICLASS_CLASSIFICATION:
+            target_is_numeric = self._data_info.get("target_is_numeric", False)
+            if target_is_numeric:
+                try:
+                    predictions["label"] = predictions["label"].astype(np.int32)
+                except Exception as e:
+                    predictions["label"] = predictions["label"].astype(np.float)
+            return predictions, shap_values
+        # Regression
+        else:
+            return predictions, shap_values
+        
     def _base_predict(self, X, model=None):
         if model is None:
             if self._best_model is None:
@@ -1508,13 +1577,25 @@ class BaseAutoML(BaseEstimator, ABC):
             target_is_numeric = self._data_info.get("target_is_numeric", False)
             if target_is_numeric:
                 try:
-                    predictions["label"] = predictions["label"].astype(int)
+                    predictions["label"] = predictions["label"].astype(np.int32)
                 except Exception as e:
-                    predictions["label"] = predictions["label"].astype(float)
+                    predictions["label"] = predictions["label"].astype(np.float)
             return predictions
         # Regression
         else:
             return predictions
+
+    def _predict_plot(self, X):
+
+        predictions, shap_values = self._base_predict_plot(X)
+        # Return predictions
+        # If classification task the result is in column 'label'
+        # If regression task the result is in column 'prediction'
+        return (
+            predictions["label"].to_numpy()
+            if self._ml_task != REGRESSION
+            else predictions["prediction"].to_numpy()
+        ), shap_values
 
     def _predict(self, X):
         predictions = self._base_predict(X)
@@ -1647,12 +1728,12 @@ class BaseAutoML(BaseEstimator, ABC):
                 ]
             if self._get_mode() == "Perform":
                 return [
-                    "Linear",
-                    "Random Forest",
+                    #"Linear",
+                    #"Random Forest",
                     "LightGBM",
                     "Xgboost",
                     "CatBoost",
-                    "Neural Network",
+                    #"Neural Network",
                 ]
             if self._get_mode() == "Compete":
                 return [

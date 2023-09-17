@@ -427,6 +427,25 @@ class AutoML(BaseAutoML):
         """
         return self._fit(X, y, sample_weight, cv, sensitive_features)
 
+    def predict_plot(self, X: Union[List, numpy.ndarray, pandas.DataFrame]) -> numpy.ndarray:
+        """
+        Computes predictions from AutoML best model.
+
+        Arguments:
+            X (list or numpy.ndarray or pandas.DataFrame):
+                Input values to make predictions on.
+
+        Returns:
+            numpy.ndarray:
+
+            - One-dimensional array of class labels for classification.
+            - One-dimensional array of predictions for regression.
+
+        Raises:
+            AutoMLException: Model has not yet been fitted.
+        """
+        return self._predict_plot(X)
+
     def predict(self, X: Union[List, numpy.ndarray, pandas.DataFrame]) -> numpy.ndarray:
         """
         Computes predictions from AutoML best model.

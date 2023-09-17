@@ -9,6 +9,10 @@ import logging
 import json
 import gc
 import sys
+import matplotlib
+#matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import shap
 
 from supervised.callbacks.callback_list import CallbackList
 from supervised.validation.validation_step import ValidationStep
@@ -439,6 +443,49 @@ class ModelFramework:
             return True
 
         return self._single_prediction_time < max_single_prediction_time
+
+    def predict_plot(self, X):
+        logger.debug("ModelFramework.predict")
+
+        if self.learners is None or len(self.learners) == 0:
+            raise Exception("Learnes are not initialized")
+        # run predict on all learners and return the average
+        y_predicted = None  # np.zeros((X.shape[0],))
+        shap_values = None
+        for ind, learner in enumerate(self.learners):
+            # preprocessing goes here
+            X_data, _, _ = self.preprocessings[ind].transform(X.copy(), None)
+            #y_p = learner.predict(X_data)
+            
+            y_p, shap_v = learner.predict_shap(X_data)
+            shap_values = shap_v if shap_values is None else [x + y for x, y in zip(shap_values, shap_v)]
+            
+            y_p = self.preprocessings[ind].inverse_scale_target(y_p)
+
+            y_predicted = y_p if y_predicted is None else y_predicted + y_p
+
+        y_predicted_average = y_predicted / float(len(self.learners))
+        
+        y_predicted_final = self.preprocessings[0].prepare_target_labels(
+            y_predicted_average
+        )
+        
+        for idx, _ in enumerate(shap_values):
+            shap_values[idx] = shap_values[idx] / float(len(self.learners))
+        '''
+        fig = plt.figure(figsize=(8,4))
+        ax = fig.add_subplot()
+        print("SHAP Plotting..")
+        shap.summary_plot(shap_values, X, max_display=10, show=False, plot_type='bar')
+        ax.set_xlabel("SHAP Value [Average impact on model]")
+        plt.legend(["0: Mild","1: Mild to Moderate","2: Severe"])
+        #f = plt.gcf()
+        root_path = "/home/won/workspace/iip_api/"
+        plt.savefig(os.path.join(root_path, "temp.png"))
+        image_arr = plt.imread(os.path.join(root_path, "temp.png"))
+        '''
+
+        return y_predicted_final, shap_values #image_arr
 
     def predict(self, X):
         logger.debug("ModelFramework.predict")
