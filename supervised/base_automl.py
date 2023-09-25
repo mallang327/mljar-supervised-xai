@@ -1503,7 +1503,7 @@ class BaseAutoML(BaseEstimator, ABC):
             predictions["label"] = predictions["label"].map(
                 {True: pos_label, False: neg_label}
             )
-            return predictions, shap_values
+            return predictions, shap_values, X
         elif self._ml_task == MULTICLASS_CLASSIFICATION:
             target_is_numeric = self._data_info.get("target_is_numeric", False)
             if target_is_numeric:
@@ -1511,10 +1511,10 @@ class BaseAutoML(BaseEstimator, ABC):
                     predictions["label"] = predictions["label"].astype(np.int32)
                 except Exception as e:
                     predictions["label"] = predictions["label"].astype(np.float)
-            return predictions, shap_values
+            return predictions, shap_values, X
         # Regression
         else:
-            return predictions, shap_values
+            return predictions, shap_values, X
         
     def _base_predict(self, X, model=None):
         if model is None:
