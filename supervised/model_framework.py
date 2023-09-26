@@ -452,14 +452,16 @@ class ModelFramework:
         # run predict on all learners and return the average
         y_predicted = None  # np.zeros((X.shape[0],))
         shap_values = None
+        expected_values = None
  
         for ind, learner in enumerate(self.learners):
             # preprocessing goes here
             X_data, _, _ = self.preprocessings[ind].transform(X.copy(), None)
             #y_p = learner.predict(X_data)
 
-            y_p, shap_v = learner.predict_shap(X_data)
+            y_p, shap_v, expected_v = learner.predict_shap(X_data)
             shap_values = shap_v if shap_values is None else [x + y for x, y in zip(shap_values, shap_v)]
+            expected_values = expected_v if expected_values is None else [x + y for x, y in zip(expected_values, expected_v)]
             
             y_p = self.preprocessings[ind].inverse_scale_target(y_p)
 
@@ -473,6 +475,8 @@ class ModelFramework:
         
         for idx, _ in enumerate(shap_values):
             shap_values[idx] = shap_values[idx] / float(len(self.learners))
+        for idx, _ in enumerate(expected_values):
+            expected_values[idx] = expected_values[idx] / float(len(self.learners))
         '''
         fig = plt.figure(figsize=(8,4))
         ax = fig.add_subplot()
@@ -486,7 +490,7 @@ class ModelFramework:
         image_arr = plt.imread(os.path.join(root_path, "temp.png"))
         '''
 
-        return y_predicted_final, shap_values #image_arr
+        return y_predicted_final, shap_values, expected_values #image_arr
 
     def predict(self, X):
         logger.debug("ModelFramework.predict")

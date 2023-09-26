@@ -275,8 +275,9 @@ class LightgbmAlgorithm(BaseAlgorithm):
         model_shap.params = self.params
         explainer = shap.TreeExplainer(model_shap)
         shap_values = explainer.shap_values(X)
+        expected_value = explainer.expected_value
         
-        return self.model.predict(X.values if isinstance(X, pd.DataFrame) else X), shap_values
+        return self.model.predict(X.values if isinstance(X, pd.DataFrame) else X), shap_values, expected_value
 
     def copy(self):
         with open(os.devnull, "w") as f, contextlib.redirect_stdout(f):

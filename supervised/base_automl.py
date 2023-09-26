@@ -1479,11 +1479,11 @@ class BaseAutoML(BaseEstimator, ABC):
 
             if model.get_type() == "Ensemble":
                 # Ensemble is using both original and stacked data
-                predictions, shap_values = model.predict_plot(X, X_stacked)
+                predictions, shap_values, expected_values = model.predict_plot(X, X_stacked)
             else:
-                predictions, shap_values = model.predict_plot(X_stacked)
+                predictions, shap_values, expected_values = model.predict_plot(X_stacked)
         else:
-            predictions, shap_values = model.predict_plot(X)
+            predictions, shap_values, expected_values = model.predict_plot(X)
 
         if self._ml_task == BINARY_CLASSIFICATION:
             # need to predict the label based on predictions and threshold
@@ -1503,7 +1503,7 @@ class BaseAutoML(BaseEstimator, ABC):
             predictions["label"] = predictions["label"].map(
                 {True: pos_label, False: neg_label}
             )
-            return predictions, shap_values, X
+            return predictions, shap_values, expected_values, X
         elif self._ml_task == MULTICLASS_CLASSIFICATION:
             target_is_numeric = self._data_info.get("target_is_numeric", False)
             if target_is_numeric:
@@ -1511,10 +1511,10 @@ class BaseAutoML(BaseEstimator, ABC):
                     predictions["label"] = predictions["label"].astype(np.int32)
                 except Exception as e:
                     predictions["label"] = predictions["label"].astype(np.float)
-            return predictions, shap_values, X
+            return predictions, shap_values, expected_values, X
         # Regression
         else:
-            return predictions, shap_values, X
+            return predictions, shap_values, expected_values, X
         
     def _base_predict(self, X, model=None):
         if model is None:
@@ -1587,7 +1587,7 @@ class BaseAutoML(BaseEstimator, ABC):
 
     def _predict_plot(self, X):
 
-        predictions, shap_values, X = self._base_predict_plot(X)
+        predictions, shap_values, expected_values, X = self._base_predict_plot(X)
         # Return predictions
         # If classification task the result is in column 'label'
         # If regression task the result is in column 'prediction'
@@ -1595,7 +1595,7 @@ class BaseAutoML(BaseEstimator, ABC):
             predictions["label"].to_numpy()
             if self._ml_task != REGRESSION
             else predictions["prediction"].to_numpy()
-        ), shap_values, X
+        ), shap_values, expected_values, X
 
     def _predict(self, X):
         predictions = self._base_predict(X)
