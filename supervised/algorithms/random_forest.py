@@ -2,6 +2,7 @@ import logging
 import os
 import sklearn
 import numpy as np
+from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
 
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
 
 
-class RandomForestAlgorithm(SklearnTreesEnsembleClassifierAlgorithm):
+class RandomForestAlgorithm(SklearnTreesEnsembleClassifierAlgorithm, ClassifierMixin):
     algorithm_name = "Random Forest"
     algorithm_short_name = "Random Forest"
 
@@ -50,7 +51,7 @@ class RandomForestAlgorithm(SklearnTreesEnsembleClassifierAlgorithm):
         return "random_forest"
 
 
-class RandomForestRegressorAlgorithm(SklearnTreesEnsembleRegressorAlgorithm):
+class RandomForestRegressorAlgorithm(SklearnTreesEnsembleRegressorAlgorithm, RegressorMixin):
     algorithm_name = "Random Forest"
     algorithm_short_name = "Random Forest"
 

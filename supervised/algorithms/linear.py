@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import warnings
 
+from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import LogisticRegression, LinearRegression
 
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
 
 
-class LinearAlgorithm(SklearnAlgorithm):
+class LinearAlgorithm(SklearnAlgorithm, ClassifierMixin):
     algorithm_name = "Logistic Regression"
     algorithm_short_name = "Linear"
 
@@ -104,7 +105,7 @@ class LinearAlgorithm(SklearnAlgorithm):
             )
 
 
-class LinearRegressorAlgorithm(SklearnAlgorithm):
+class LinearRegressorAlgorithm(SklearnAlgorithm, RegressorMixin):
     algorithm_name = "Linear Regression"
     algorithm_short_name = "Linear"
 

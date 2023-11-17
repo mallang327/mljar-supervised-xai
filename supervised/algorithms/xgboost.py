@@ -7,6 +7,7 @@ import time
 from inspect import signature
 import xgboost as xgb
 
+from sklearn.base import ClassifierMixin, RegressorMixin
 from supervised.algorithms.algorithm import BaseAlgorithm
 from supervised.algorithms.registry import AlgorithmsRegistry
 from supervised.algorithms.registry import (
@@ -366,9 +367,12 @@ required_preprocessing = [
     "target_as_integer",
 ]
 
+class XgbClassifier(XgbAlgorithm, ClassifierMixin):
+    pass
+
 AlgorithmsRegistry.add(
     BINARY_CLASSIFICATION,
-    XgbAlgorithm,
+    XgbClassifier,
     xgb_bin_class_params,
     required_preprocessing,
     additional,
@@ -377,7 +381,7 @@ AlgorithmsRegistry.add(
 
 AlgorithmsRegistry.add(
     MULTICLASS_CLASSIFICATION,
-    XgbAlgorithm,
+    XgbClassifier,
     xgb_multi_class_params,
     required_preprocessing,
     additional,
@@ -392,10 +396,12 @@ regression_required_preprocessing = [
     "target_scale",
 ]
 
+class XgbRegressor(XgbAlgorithm, RegressorMixin):
+    pass
 
 AlgorithmsRegistry.add(
     REGRESSION,
-    XgbAlgorithm,
+    XgbRegressor,
     xgb_regression_params,
     regression_required_preprocessing,
     additional,

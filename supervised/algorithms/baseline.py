@@ -1,8 +1,8 @@
 import logging
 import os
 import sklearn
-from sklearn.dummy import DummyClassifier
-from sklearn.dummy import DummyRegressor
+from sklearn.base import ClassifierMixin, RegressorMixin
+from sklearn.dummy import DummyClassifier, DummyRegressor
 
 from supervised.algorithms.sklearn import SklearnAlgorithm
 from supervised.algorithms.registry import AlgorithmsRegistry
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
 
 
-class BaselineClassifierAlgorithm(SklearnAlgorithm):
+class BaselineClassifierAlgorithm(SklearnAlgorithm, ClassifierMixin):
     algorithm_name = "Baseline Classifier"
     algorithm_short_name = "Baseline"
 
@@ -40,7 +40,7 @@ class BaselineClassifierAlgorithm(SklearnAlgorithm):
         )
 
 
-class BaselineRegressorAlgorithm(SklearnAlgorithm):
+class BaselineRegressorAlgorithm(SklearnAlgorithm, RegressorMixin):
     algorithm_name = "Baseline Regressor"
     algorithm_short_name = "Baseline"
 

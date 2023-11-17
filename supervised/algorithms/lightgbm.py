@@ -8,6 +8,7 @@ import contextlib
 import lightgbm as lgb
 import shap
 
+from sklearn.base import ClassifierMixin, RegressorMixin
 from supervised.algorithms.algorithm import BaseAlgorithm
 from supervised.algorithms.registry import AlgorithmsRegistry
 from supervised.algorithms.registry import (
@@ -357,9 +358,12 @@ classification_multi_default_params = {
 lgbr_params = copy.deepcopy(lgbm_bin_params)
 lgbr_params["objective"] = ["regression"]
 
+class LgbmClassifier(LightgbmAlgorithm, ClassifierMixin):
+    pass
+
 AlgorithmsRegistry.add(
     BINARY_CLASSIFICATION,
-    LightgbmAlgorithm,
+    LgbmClassifier,
     lgbm_bin_params,
     required_preprocessing,
     additional,
@@ -368,7 +372,7 @@ AlgorithmsRegistry.add(
 
 AlgorithmsRegistry.add(
     MULTICLASS_CLASSIFICATION,
-    LightgbmAlgorithm,
+    LgbmClassifier,
     lgbm_multi_params,
     required_preprocessing,
     additional,
@@ -393,9 +397,12 @@ regression_default_params = {
     "min_data_in_leaf": 10,
 }
 
+class LgbmRegressor(LightgbmAlgorithm, RegressorMixin):
+    pass
+
 AlgorithmsRegistry.add(
     REGRESSION,
-    LightgbmAlgorithm,
+    LgbmRegressor,
     lgbr_params,
     regression_required_preprocessing,
     additional,
