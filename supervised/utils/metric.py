@@ -63,10 +63,37 @@ def negative_f1(y_true, y_predicted, sample_weight=None):
         y_predicted = np.argmax(y_predicted, axis=1)
         average = "micro"
 
-    val = f1_score(y_true, y_predicted, sample_weight=sample_weight, average=average)
+    val = f1_score(y_true, y_predicted, sample_weight=sample_weight, average="macro")#average)
 
     return -val
 
+# Not complete
+def negative_accuracy_macro(y_true, y_predicted, sample_weight=None):
+
+    if isinstance(y_true, pd.DataFrame):
+        y_true = np.array(y_true)
+    if isinstance(y_predicted, pd.DataFrame):
+        y_predicted = np.array(y_predicted)
+
+    if len(y_predicted.shape) == 2 and y_predicted.shape[1] == 1:
+        y_predicted = y_predicted.ravel()
+
+    if len(y_predicted.shape) == 1:
+        y_predicted = (y_predicted > 0.5).astype(int)
+    else:
+        y_predicted = np.argmax(y_predicted, axis=1)
+
+    class_accuracies = []
+    for class_label in set(y_true):
+        class_true = [1 if label == class_label else 0 for label in y_true]
+        class_pred = [1 if label == class_label else 0 for label in y_predicted]
+        class_accuracy = accuracy_score(class_true, class_pred)
+        class_accuracies.append(class_accuracy)
+
+    # Macro accuracy ���
+    val = sum(class_accuracies) / len(class_accuracies)
+
+    return -val
 
 def negative_accuracy(y_true, y_predicted, sample_weight=None):
     if isinstance(y_true, pd.DataFrame):
@@ -206,11 +233,11 @@ def lightgbm_eval_metric_f1(preds, dtrain):
     target = dtrain.get_label()
     weight = dtrain.get_weight()
 
-    unique_targets = np.unique(target)
-    if len(unique_targets) > 2:
-        cols = len(unique_targets)
-        rows = int(preds.shape[0] / len(unique_targets))
-        preds = np.reshape(preds, (rows, cols), order="F")
+    # unique_targets = np.unique(target)
+    # if len(unique_targets) > 2:
+    #     cols = len(unique_targets)
+    #     rows = int(preds.shape[0] / len(unique_targets))
+    #     preds = np.reshape(preds, (rows, cols), order="F")
 
     return "f1", -negative_f1(target, preds, weight), True
 
@@ -404,6 +431,8 @@ class Metric(object):
             self.metric = negative_average_precision
         elif self.name == "accuracy":
             self.metric = negative_accuracy
+        elif self.name == "accuracy_macro":
+            self.metric = negative_accuracy_macro   
         elif self.name == "user_defined_metric":
             self.metric = UserDefinedEvalMetric.eval_metric
         # elif self.name == "rmsle": # need to update target preprocessing
